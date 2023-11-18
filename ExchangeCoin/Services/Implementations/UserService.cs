@@ -1,7 +1,8 @@
 ﻿using ExchangeCoinApi.Data;
-using ExchangeCoinApi.Data.Entiities;
+using ExchangeCoinApi.Entities;
+using ExchangeCoinApi.Models.DTOs;
 
-namespace ExchangeCoin.Services
+namespace ExchangeCoinApi.Services.Implementations
 {
     public class UserService
     {
@@ -40,10 +41,9 @@ namespace ExchangeCoin.Services
             return userid;
         }
 
-        public bool ValidateCredentials(string email , string password)
+        public User? ValidateUser(AuthenticationRequestBody authRequestBody)
         {
-            User? userforLoggin = GetUsers(email);
-            if (userforLoggin != null);
+            return _context.Users.FirstOrDefault(p => p.Usuario == authRequestBody.Usuario && p.Contrasenia == authRequestBody.Contrasenia);
         }
     }
 }

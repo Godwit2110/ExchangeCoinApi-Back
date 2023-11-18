@@ -1,7 +1,7 @@
 ﻿using ExchangeCoinApi.Data;
 using ExchangeCoinApi.Data.Entiities;
 
-namespace ExchangeCoin.Services
+namespace ExchangeCoinApi.Services.Implementations
 {
     public class CoinService
     {

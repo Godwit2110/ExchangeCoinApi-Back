@@ -1,14 +1,12 @@
-﻿using ExchangeCoin.Services;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using ExchangeCoinApi.Models;
-using ExchangeCoinApi.Services.Interfaces;
 using ExchangeCoinApi.Models.DTOs;
+using ExchangeCoin.Services.Interfaces;
 
-namespace Url_Shortener.Controllers
+namespace ExchangeCoin.Controllers
 {
     [Route("api/authentication")]
     [ApiController]

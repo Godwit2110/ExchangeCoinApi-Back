@@ -1,4 +1,4 @@
-﻿using ExchangeCoinApi.Data.Entiities;
+﻿using ExchangeCoinApi.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace ExchangeCoinApi.Models.DTOs

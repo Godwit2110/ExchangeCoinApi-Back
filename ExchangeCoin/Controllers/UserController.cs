@@ -1,10 +1,8 @@
-﻿using ExchangeCoin.Services;
-using Microsoft.AspNetCore.Authorization;
+﻿using ExchangeCoin.Services.Interfaces;
+using ExchangeCoinApi.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using UrlShorterer.Models;
-using UrlShorterer.Services.Interfaces;
 
-namespace UrlShortener.Controllers
+namespace ExchangeCoin.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -17,7 +15,7 @@ namespace UrlShortener.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser(UserForCreationDto dto)
+        public IActionResult CreateUser(CreateAndUpdateUserDto dto)
         {
             try
             {

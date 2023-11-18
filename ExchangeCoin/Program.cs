@@ -7,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 using ExchangeCoinApi.Data;
 using ExchangeCoinApi.Services.Interfaces;
 using ExchangeCoinApi.Services.Implementations;
-using ExchangeCoin.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
