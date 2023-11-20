@@ -12,6 +12,8 @@ namespace ExchangeCoinApi.Entities
         public string Nombre { get; set; }
         [Required]
         public int Valor { get; set; }
+        [Required]
+        public string? Imagen { get; set; }
 
         [ForeignKey("UserId")]
 

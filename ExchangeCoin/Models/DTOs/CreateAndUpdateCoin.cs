@@ -7,6 +7,7 @@ namespace ExchangeCoinApi.Models.DTOs
     {
         [Required]
         public string Nombre { get; set; }
-        public int? Valor { get; set; }
+        public int Valor { get; set; }
+        public string Imagen { get; set; }
     }
 }

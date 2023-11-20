@@ -1,83 +1,70 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ExchangeCoin.Services.Interfaces;
+using ExchangeCoinApi.Models.DTOs;
+using ExchangeCoinApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExchangeCoinApi.Controllers
 {
-    public class CoinController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class CoinController : ControllerBase
     {
-        // GET: CoinController
-        public ActionResult Index()
+        private readonly ICoinService _coinService;
+        private readonly IUserService _userService;
+
+        public CoinController(ICoinService coinService, IUserService userRepository)
         {
-            return View();
+            _coinService = coinService;
+            _userService = userRepository;
         }
 
-        // GET: CoinController/Details/5
-        public ActionResult Details(int id)
+        [HttpGet]
+        public IActionResult GetAll()
         {
-            return View();
+            int userId = Int32.Parse(HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("nameidentifier")).Value);
+            return Ok(_coinService.GetAllByUser(userId));
         }
 
-        // GET: CoinController/Create
-        public ActionResult Create()
+        [HttpGet("{id}")]
+        public IActionResult GetOne(int id)
         {
-            return View();
+            int userId = Int32.Parse(HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("nameidentifier")).Value);
+            return Ok(_coinService.GetAllByUser(userId).Where(x => x.Id == id));
         }
 
-        // POST: CoinController/Create
+
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public IActionResult CreateCoin(CreateAndUpdateCoin createCoinDto)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            int userId = Int32.Parse(HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("nameidentifier")).Value);
+            _coinService.Create(createCoinDto, userId);
+            return Created("Created", createCoinDto);
         }
 
-        // GET: CoinController/Edit/5
-        public ActionResult Edit(int id)
+        [HttpPut]
+        [Route("{Id}")]
+        public IActionResult UpdateContact(CreateAndUpdateCoin dto, int contactId)
         {
-            return View();
+            _coinService.Update(dto, contactId);
+            return NoContent();
         }
 
-        // POST: CoinController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        [HttpDelete]
+        public IActionResult Delete(int id)
         {
-            try
+            var role = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("role"));
+            if (role.Value == "Admin")
             {
-                return RedirectToAction(nameof(Index));
+                _userService.Delete(id);
             }
-            catch
+            else
             {
-                return View();
+                _userService.Archive(id);
             }
+            return NoContent();
         }
 
-        // GET: CoinController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: CoinController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
     }
 }

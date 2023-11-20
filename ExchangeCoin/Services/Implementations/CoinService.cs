@@ -1,43 +1,53 @@
 ﻿using ExchangeCoinApi.Data;
-using ExchangeCoinApi.Data.Entiities;
+using ExchangeCoinApi.Entities;
+using ExchangeCoinApi.Models.DTOs;
+using ExchangeCoinApi.Services.Interfaces;
 
 namespace ExchangeCoinApi.Services.Implementations
 {
-    public class CoinService
+    public class CoinService : ICoinService
     {
         private readonly ExchangeContext _context;
+
         public CoinService(ExchangeContext context)
         {
             _context = context;
         }
+        public List<Coin> GetAllByUser(int id)
+        {
 
-        public Coin? GetCoins(int id)
-        {
-            return _context.Coins.SingleOrDefault(c => c.Id == id);
+            return _context.Coins.Where(c => c.User.Id == id).ToList();
         }
-        public bool DeleteCoin(int id)
+
+        public void Create(CreateAndUpdateCoin dto, int loggedUserId)
         {
-            Coin? CoinDelete = GetCoins(id);
-            if (CoinDelete != null)
+            Coin contact = new Coin()
             {
-                _context.Coins.Remove(CoinDelete);
-                _context.SaveChanges();
-                return true;
-            }
-            return false;
-        }
-
-        public Coin UpdateCoin(Coin CoinUpdate)
-        {
-            Coin? updatedCoin = _context.Coins.Update(CoinUpdate).Entity;
-            return updatedCoin;
-        }
-
-        public int AddCoin(Coin Coin)
-        {
-            int contactid = _context.Coins.Add(Coin).Entity.Id;
+                Imagen = dto.Imagen,
+                Nombre = dto.Nombre,
+                Valor = dto.Valor,
+                UserId = loggedUserId,
+            };
+            _context.Coins.Add(contact);
             _context.SaveChanges();
-            return contactid;
+        }
+
+        public void Update(CreateAndUpdateCoin dto, int contactId)
+        {
+            Coin? contact = _context.Coins.SingleOrDefault(contact => contact.Id == contactId);
+            if (contact is not null)
+            {
+                contact.Imagen = dto.Imagen;
+                contact.Nombre = dto.Nombre;
+                contact.Valor = dto.Valor;
+                _context.SaveChanges();
+            }
+
+        }
+        public void Delete(int id)
+        {
+            _context.Coins.Remove(_context.Coins.Single(c => c.Id == id));
+            _context.SaveChanges();
         }
     }
 }
