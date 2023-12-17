@@ -1,53 +1,117 @@
-﻿using ExchangeCoinApi.Data;
+﻿using ConversionDeMonedas.Data;
+using ConversionDeMonedas.Entities;
+using ConversionDeMonedas.Models.Dtos;
+using System.Xml.Linq;
+using System;
+using ExchangeCoinApi.Data;
+using ExchangeCoin.Models;
 using ExchangeCoinApi.Entities;
 using ExchangeCoinApi.Models.DTOs;
-using ExchangeCoinApi.Services.Interfaces;
 
 namespace ExchangeCoinApi.Services.Implementations
 {
-    public class CoinService : ICoinService
+    public class CoinService
     {
-        private readonly ExchangeContext _context;
-
+        private readonly ExchangeContext _exchangecontext;
         public CoinService(ExchangeContext context)
         {
-            _context = context;
-        }
-        public List<Coin> GetAllByUser(int id)
-        {
-
-            return _context.Coins.Where(c => c.User.Id == id).ToList();
+            _exchangecontext = context;
         }
 
-        public void Create(CreateAndUpdateCoin dto, int loggedUserId)
+        public double Convert(User usuario, double amount, ConvertProcess toConvert)
         {
-            Coin contact = new Coin()
+            double result = amount * toConvert.VelorConvertido / toConvert.ValorParaConvertir;
+            return result;
+        }
+
+        public void CreateCoin(int LoggeduserId, CreateAndUpdateCoin dto)
+        {
+            Coin newCoin = new Coin()
             {
-                Imagen = dto.Imagen,
                 Nombre = dto.Nombre,
+                Imagen = dto.Imagen,
                 Valor = dto.Valor,
-                UserId = loggedUserId,
+                UserId = LoggeduserId
+
             };
-            _context.Coins.Add(contact);
-            _context.SaveChanges();
+            _exchangecontext.monedasUser.Add(newCoin);
+            _exchangecontext.SaveChanges();
         }
 
-        public void Update(CreateAndUpdateCoin dto, int contactId)
+        public void UpdateCoin(int monedaId, string leyenda, CreateAndUpdateCoin dto)
         {
-            Coin? contact = _context.Coins.SingleOrDefault(contact => contact.Id == contactId);
-            if (contact is not null)
+            Coin? coinToUpdate = _exchangecontext.monedasUser.SingleOrDefault(c => c.Id == monedaId);
+            Favoritas? coinFavToUpdate = _exchangecontext.Favoritas.SingleOrDefault(f => f.Nombre == Nombre);
+
+            if (coinToUpdate is not null)
             {
-                contact.Imagen = dto.Imagen;
-                contact.Nombre = dto.Nombre;
-                contact.Valor = dto.Valor;
-                _context.SaveChanges();
+                //edit user coin 
+                coinToUpdate.Leyenda = dto.Leyenda;
+                coinToUpdate.Simbolo = dto.Simbolo;
+                coinToUpdate.IC = dto.IC;
+
+                if (coinFavToUpdate is not null)
+                {
+                    //edit fav coin
+                    coinFavToUpdate.Leyenda = dto.Leyenda;
+                    coinFavToUpdate.Simbolo = dto.Simbolo;
+                    coinFavToUpdate.IC = dto.IC;
+                }
+                _exchangecontext.SaveChanges();
+            }
+            else
+            {
+                Console.WriteLine("El Id no coincide");
+            }
+        }
+        public void DeleteCoin(int monedaId, string leyenda)
+        {
+            Favoritas? coinFavToDelete = _exchangecontext.Favoritas.SingleOrDefault(f => f.Leyenda == leyenda);
+            if (coinFavToDelete is not null)
+            {
+                _CDMContext.Favoritas.Remove(coinFavToDelete);
+            }
+            _exchangecontext.monedasUser.Remove(_exchangecontext.monedasUser.Single(c => c.Id == monedaId));
+            _exchangecontext.SaveChanges();
+        }
+
+        public void AddFavCoin(int LoggeduserId, AddFavoriteDto dto)
+        {
+            List<Favoritas> coins = _exchangecontext.Favoritas.Where(u => u.Id == LoggeduserId).ToList();
+
+            bool esta = false;
+
+            foreach (Favoritas coin in coins)
+            {
+                if (dto.Leyenda == coin.Leyenda)
+                {
+                    esta = true;
+                    break;
+                }
             }
 
+            if (esta == false)
+            {
+                Favoritas newFav = new Favoritas()
+                {
+                    Leyenda = dto.Leyenda,
+                    Simbolo = dto.Simbolo,
+                    IC = dto.IC,
+                    UserId = LoggeduserId
+                };
+                _exchangecontext.Favoritas.Add(newFav);
+                _exchangecontext.SaveChanges();
+            }
+            else
+            {
+                Console.WriteLine("Esa moneda ya esta en favoritos");
+            }
         }
-        public void Delete(int id)
+
+        public void DeleteFavCoin(int monedaId)
         {
-            _context.Coins.Remove(_context.Coins.Single(c => c.Id == id));
-            _context.SaveChanges();
+            _exchangecontext.Favoritas.Remove(_exchangecontext.Favoritas.Single(c => c.Id == monedaId));
+            _exchangecontext.SaveChanges();
         }
     }
 }

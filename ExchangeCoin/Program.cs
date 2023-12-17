@@ -1,16 +1,28 @@
-using System.Text;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
-using Microsoft.OpenApi.Models;
-using Microsoft.IdentityModel.Tokens;
-using ExchangeCoinApi.Data;
-using ExchangeCoinApi.Services.Interfaces;
+using AgendaApi.Services.Implementations;
+using ConversionDeMonedas.Data;
+using ConversionDeMonedas.Services.Implementations;
 using ExchangeCoinApi.Services.Implementations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        name: "AllowAny",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+        });
+});
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -21,11 +33,11 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(setupAction =>
 {
-    setupAction.AddSecurityDefinition("ExchangeCoinApiApiBearerAuth", new OpenApiSecurityScheme() //Esto va a permitir usar swagger con el token.
+    setupAction.AddSecurityDefinition("ConversorApiBearerAuth", new OpenApiSecurityScheme() //Esto va a permitir usar swagger con el token.
     {
         Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
-        Description = "Acá pegar el token generado al loguearse."
+        Description = "Ac� pegar el token generado al loguearse."
     });
 
     setupAction.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -36,18 +48,18 @@ builder.Services.AddSwaggerGen(setupAction =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "ExchangeCoinApiApiBearerAuth" } //Tiene que coincidir con el id seteado arriba en la definición
+                    Id = "ConversorApiBearerAuth" } //Tiene que coincidir con el id seteado arriba en la definici�n
                 }, new List<string>() }
     });
 });
 
-builder.Services.AddDbContext<ExchangeContext>(Options =>
+builder.Services.AddDbContext<ConversionDeMonedasContext>(Options =>
 {
-    Options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    Options.UseSqlite(builder.Configuration.GetConnectionString("ConvertidorAPIDBConnectionString"));
 });
 
-builder.Services.AddAuthentication("Bearer") //"Bearer" es el tipo de auntenticación que tenemos que elegir después en PostMan para pasarle el token
-    .AddJwtBearer(options => //Acá definimos la configuración de la autenticación. le decimos qué cosas queremos comprobar. La fecha de expiración se valida por defecto.
+builder.Services.AddAuthentication("Bearer") //"Bearer" es el tipo de auntenticaci�n que tenemos que elegir despu�s en PostMan para pasarle el token
+    .AddJwtBearer(options => //Ac� definimos la configuraci�n de la autenticaci�n. le decimos qu� cosas queremos comprobar. La fecha de expiraci�n se valida por defecto.
     {
         options.TokenValidationParameters = new()
         {
@@ -61,9 +73,10 @@ builder.Services.AddAuthentication("Bearer") //"Bearer" es el tipo de auntentica
     }
 );
 
-
 #region DependencyInjections
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<CoinService>();
+builder.Services.AddScoped<ViewService>();
 #endregion
 
 var app = builder.Build();
@@ -77,6 +90,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowAny");
+
 app.UseAuthentication();
 
 app.UseAuthorization();
@@ -84,3 +99,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+

@@ -1,53 +1,26 @@
-﻿using ExchangeCoin.Models;
-using ExchangeCoin.Models.Dtos;
-using ExchangeCoin.Services.Interfaces;
-using ExchangeCoin.Services.Interfaces;
-using ExchangeCoinApi.Models.DTOs;
-using Microsoft.AspNetCore.Authorization;
+﻿using AgendaApi.Services.Implementations;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ExchangeCoin.Controllers
+using ConversionDeMonedas.Models.Dtos;
+using ConversionDeMonedas.Services.Implementations;
+using Microsoft.AspNetCore.Mvc;
+
+namespace ExchangeCoinApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+
     public class UserController : ControllerBase
     {
-        private readonly IUserService _userService;
-        public UserController(IUserService userRepository)
+        private readonly UserService _userService;
+
+        public UserController(UserService userService)
         {
-            _userService = userRepository;
+            _userService = userService;
         }
 
-        [HttpGet]
-        public ActionResult<UserDto> GetAll()
-        {
-            //No lo estamos verificando, pero por lo general un GetAll de todos los users lo debería poder hacer solo un usuario con rol ADMIN
-            return Ok(_userService.GetAll());
-        }
-
-        [HttpGet("{id}")]
-        public IActionResult GetOneById(int id)
-        {
-            if (id == 0)
-            {
-                return BadRequest("El ID ingresado debe ser distinto de 0");
-            }
-
-            GetUserByIdDto? user = _userService.GetById(id);
-
-            if (user is null)
-            {
-                return NotFound();
-            }
-
-            return Ok(user);
-
-        }
-
-        [HttpPost]
-        [AllowAnonymous] //Esto lo agregamos porque en nuestro caso el create user lo vamos a usar para el registro (queremos saltear la autenticación)
-        public IActionResult CreateUser(CreateAndUpdateUserDto dto)
+        [HttpPost("RegistrodeUsuario")]
+        public IActionResult Create(CreateUserDto dto)
         {
             try
             {
@@ -57,40 +30,37 @@ namespace ExchangeCoin.Controllers
             {
                 return BadRequest(ex);
             }
-            return Created("Created", dto);
+            return Ok("Creado correctamente");
         }
+        [HttpPost("AgregarFavorita")]
 
-        [HttpPut("{userId}")]
-        public IActionResult UpdateUser(CreateAndUpdateUserDto dto, int userId)
+        public IActionResult AddFavCoin(AddFavoriteDto favDto)
         {
-            if (!_userService.CheckIfUserExists(userId))
-            {
-                return NotFound();
-            }
+            int userId = Int32.Parse(HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("nameidentifier")).Value);
             try
             {
-                _userService.Update(dto, userId);
+                _coinService.AddFavCoin(userId, favDto);
             }
             catch (Exception ex)
             {
                 return BadRequest(ex);
             }
-            return NoContent();
+            return Ok("Agregada Correctamente");
         }
 
-        [HttpDelete]
-        public IActionResult DeleteUser(int id)
+        [HttpDelete("BorrarFavorita")]
+
+        public IActionResult DeleteFavCoin(int monedaId)
         {
             try
             {
-                _userService.RemoveUser(id);
+                _coinService.DeleteFavCoin(monedaId);
             }
             catch (Exception ex)
             {
-                BadRequest(ex);
+                return BadRequest(ex);
             }
-
-            return NoContent();
+            return Ok("Eliminada correctamente");
         }
     }
 }

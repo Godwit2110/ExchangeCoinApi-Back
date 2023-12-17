@@ -14,11 +14,18 @@ namespace ExchangeCoinApi.Entities
         [Required]
         public string Usuario { get; set; }
         [Required]
+        public string Email { get; set; }
+        [Required]
         public string Contrasenia { get; set; }
         [Required]
-        public string RepetirContrasenia { get; set; }
+        public Subscription Subscriptions { get; set; }
+
+        public int TotalConversiones { get; set; }
+
         [Required]
-        public TypeEnum Subscriptions { get; set; }
+        [ForeignKey("CoinId")]
+        public Coin Coin { get; set; }
+        public int CoinId { get; set; }
 
     }
 }

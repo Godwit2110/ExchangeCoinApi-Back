@@ -9,8 +9,8 @@ namespace ExchangeCoinApi.Models.DTOs
         [Required]
         public string Usuario { get; set; }
         [Required]
-        public string Contrasenia { get; set; }
+        public string Email { get; set; }
         [Required]
-        public string RepetirContrasenia { get; set; }
+        public string Contrasenia { get; set; }
     }
 }

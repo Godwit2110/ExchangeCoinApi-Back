@@ -1,8 +1,11 @@
-﻿using ExchangeCoin.Services.Interfaces;
-using ExchangeCoinApi.Models.DTOs;
-using ExchangeCoinApi.Services.Interfaces;
+﻿using ConversionDeMonedas.Data;
+using ConversionDeMonedas.Entities;
+using ConversionDeMonedas.Models.Dtos;
+using ConversionDeMonedas.Services.Implementations;
+using ExchangeCoinApi.Services.Implementations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace ExchangeCoinApi.Controllers
 {
@@ -11,60 +14,84 @@ namespace ExchangeCoinApi.Controllers
     [Authorize]
     public class CoinController : ControllerBase
     {
-        private readonly ICoinService _coinService;
-        private readonly IUserService _userService;
+        private readonly CoinService _coinService; ConversionDeMonedasContext _CDMContext;
 
-        public CoinController(ICoinService coinService, IUserService userRepository)
+        public CoinController(CoinService coinService, ConversionDeMonedasContext cdmContext)
         {
             _coinService = coinService;
-            _userService = userRepository;
+            _CDMContext = cdmContext;
         }
+        [HttpGet("Convertir")]
 
-        [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult Convert([FromQuery] double amount, [FromQuery] ToConvert toConvert)
         {
             int userId = Int32.Parse(HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("nameidentifier")).Value);
-            return Ok(_coinService.GetAllByUser(userId));
-        }
+            Usuario? usuario = _CDMContext.usuario.SingleOrDefault(u => u.Id == userId);
 
-        [HttpGet("{id}")]
-        public IActionResult GetOne(int id)
-        {
-            int userId = Int32.Parse(HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("nameidentifier")).Value);
-            return Ok(_coinService.GetAllByUser(userId).Where(x => x.Id == id));
-        }
-
-
-        [HttpPost]
-        public IActionResult CreateCoin(CreateAndUpdateCoin createCoinDto)
-        {
-            int userId = Int32.Parse(HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("nameidentifier")).Value);
-            _coinService.Create(createCoinDto, userId);
-            return Created("Created", createCoinDto);
-        }
-
-        [HttpPut]
-        [Route("{Id}")]
-        public IActionResult UpdateContact(CreateAndUpdateCoin dto, int contactId)
-        {
-            _coinService.Update(dto, contactId);
-            return NoContent();
-        }
-
-        [HttpDelete]
-        public IActionResult Delete(int id)
-        {
-            var role = HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("role"));
-            if (role.Value == "Admin")
+            if (usuario.TotalConversiones != 0)
             {
-                _userService.Delete(id);
+                try
+                {
+                    double result = _coinService.Convert(usuario, amount, toConvert);
+                    usuario.TotalConversiones -= 1;
+                    _CDMContext.SaveChanges();
+                    return Ok(result);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex);
+                }
             }
             else
             {
-                _userService.Archive(id);
+                double result = -1;
+                return Ok(result);
             }
-            return NoContent();
         }
 
+        [HttpPost("CrearMoneda")]
+
+        public IActionResult CreateCoin(CreateAndUpdateCoinDto dto)
+        {
+            int userId = Int32.Parse(HttpContext.User.Claims.FirstOrDefault(x => x.Type.Contains("nameidentifier")).Value);
+            try
+            {
+                _coinService.CreateCoin(userId, dto);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+            return Ok("Creada Correctamente");
+        }
+
+        [HttpPut("EditarMoneda")]
+        public IActionResult UpdateCoin(int CoinId, string leyenda, CreateAndUpdateCoinDto dto)
+        {
+            try
+            {
+                _coinService.UpdateCoin(CoinId, leyenda, dto);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+            return Ok("Editada Correctamente");
+        }
+
+        [HttpDelete("EliminarMoneda")]
+
+        public IActionResult DeleteCoin(int CoinId, string leyenda)
+        {
+            try
+            {
+                _coinService.DeleteCoin(CoinId, leyenda);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+            return Ok("Eliminada Correctamente");
+        }
     }
 }
